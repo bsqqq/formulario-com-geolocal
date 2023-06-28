@@ -20,11 +20,22 @@ type Values = {
 
 export const App = () => {
   const [coords, setCoords] = useState<GeolocationCoordinates>();
+  const [permission, setPermission] = useState<boolean>(true);
 
   useEffect(() => {
     if ("geolocation" in navigator)
-      navigator.geolocation.getCurrentPosition((pos) => setCoords(pos.coords));
-    else alert("Seu navegador não tem suporte à Geolocalização.");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoords(pos.coords),
+        (err) => {
+          if (err.code == err.PERMISSION_DENIED) {
+            setPermission(false);
+          }
+        }
+      );
+    else {
+      alert("Seu navegador não tem suporte à geolocalização.");
+      setPermission(false);
+    }
   }, [setCoords]);
 
   async function handleSubmit(values: Values) {
@@ -37,13 +48,11 @@ export const App = () => {
     lon = Number(lon);
     const { state, city } = response.data.address;
     values.coords = { state, city, lat, lon };
-    setTimeout(() => {
-      alert(JSON.stringify(values, null, 2))
-      console.log(JSON.stringify(values, null, 2));
-    }, 500);
+    alert(JSON.stringify(values, null, 2));
+    console.log(JSON.stringify(values, null, 2));
   }
 
-  return (
+  return permission ? (
     <div>
       <h1>Signup</h1>
       <Formik
@@ -109,7 +118,11 @@ export const App = () => {
         </Row>
       </Formik>
     </div>
+  ) : (
+    <>
+      <p>Impossivel continuar... é necessário que habilite a geolocalização.</p>
+    </>
   );
-}
+};
 
 export default App;
